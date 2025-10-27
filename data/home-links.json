@@ -1,0 +1,276 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "380d7c42-1ba9-42dd-a789-90b3a846fe05",
+      "name": "ArkCDC API",
+      "url": "http://lab.idatabank.com/swagger/arkcdc.html",
+      "gitUrl": "",
+      "description": "ArkCDC Network API",
+      "detailsMd": "",
+      "logoUrl": "https://avatars.githubusercontent.com/u/7658037",
+      "certRenewalDate": "",
+      "tokenExpiryDate": "",
+      "pinned": false,
+      "favorite": false,
+      "healthUrl": "",
+      "healthMethod": "HEAD",
+      "healthOkMin": 200,
+      "tags": [
+        "dev",
+        "api"
+      ]
+    },
+    {
+      "id": "95e0551b-b2f5-4669-a278-4e6a00c3b59e",
+      "name": "Ark API",
+      "url": "https://lab.idatabank.com/swagger/ark.html",
+      "gitUrl": "https://github.com/swagger-api",
+      "description": "Ark for Oracle Network API",
+      "detailsMd": "",
+      "logoUrl": "https://avatars.githubusercontent.com/u/7658037",
+      "certRenewalDate": "",
+      "tokenExpiryDate": "",
+      "pinned": false,
+      "favorite": false,
+      "healthUrl": "",
+      "healthMethod": "HEAD",
+      "healthOkMin": 200,
+      "tags": [
+        "dev",
+        "api"
+      ]
+    },
+    {
+      "id": "fd91450f-4e90-4c0f-b9f4-b15e8c92c04b",
+      "name": "Ollama + Open-WebUI",
+      "url": "http://arkdata.iptime.org:3030",
+      "gitUrl": "https://github.com/open-webui/open-webui",
+      "description": "(파일럿) Private GenAI (폐쇄망 로컬 LLM) 프레임워크",
+      "detailsMd": "",
+      "logoUrl": "https://avatars.githubusercontent.com/u/158137808",
+      "certRenewalDate": "",
+      "tokenExpiryDate": "",
+      "pinned": false,
+      "favorite": false,
+      "healthUrl": "http://arkdata.iptime.org:3030",
+      "healthMethod": "HEAD",
+      "healthOkMin": 200,
+      "tags": [
+        "pilot",
+        "ai"
+      ]
+    },
+    {
+      "id": "431808d8-7cfb-4652-af61-505f66536bab",
+      "name": "Dify",
+      "url": "http://arkdata.iptime.org:8008",
+      "gitUrl": "https://github.com/langgenius/dify",
+      "description": "( 파일럿) AI 에이전트, RAG학습, 챗봇",
+      "detailsMd": "",
+      "logoUrl": "https://avatars.githubusercontent.com/u/127165244",
+      "certRenewalDate": "",
+      "tokenExpiryDate": "",
+      "pinned": false,
+      "favorite": false,
+      "healthUrl": "http://arkdata.iptime.org:8008",
+      "healthMethod": "HEAD",
+      "healthOkMin": 200,
+      "tags": [
+        "pilot",
+        "ai"
+      ]
+    },
+    {
+      "id": "c1f7d6a2-9399-4c64-9cd4-9f1aa86b00fd",
+      "name": "n8n",
+      "url": "http://arkdata.iptime.org:7878",
+      "gitUrl": "https://github.com/n8n-io/n8n",
+      "description": "(파일럿) 워크플로우 자동화",
+      "detailsMd": "",
+      "logoUrl": "https://avatars.githubusercontent.com/u/45487711",
+      "certRenewalDate": "",
+      "tokenExpiryDate": "",
+      "pinned": false,
+      "favorite": false,
+      "healthUrl": "http://arkdata.iptime.org:7878",
+      "healthMethod": "HEAD",
+      "healthOkMin": 200,
+      "tags": [
+        "pilot",
+        "ai"
+      ]
+    },
+    {
+      "id": "b4d32f69-c745-4cb2-a6b6-814500f3aee5",
+      "name": "Grafana",
+      "url": "http://arkdata.iptime.org:3333",
+      "gitUrl": "https://github.com/grafana/grafana",
+      "description": "(파일럿) 애플리케이션 프로파일, CI/CD 파이프라인 상태",
+      "detailsMd": "",
+      "logoUrl": "https://avatars.githubusercontent.com/u/7195757",
+      "certRenewalDate": "",
+      "tokenExpiryDate": "",
+      "pinned": false,
+      "favorite": false,
+      "healthUrl": "http://arkdata.iptime.org:3333",
+      "healthMethod": "HEAD",
+      "healthOkMin": 200,
+      "tags": [
+        "monitoring"
+      ]
+    },
+    {
+      "id": "2fe6601d-b534-4762-b368-65e0c6fe62cf",
+      "name": "License v2",
+      "url": "https://lab.idatabank.com/arklicense-v2",
+      "gitUrl": "",
+      "description": "Ark for FR, Ark for CDC 라이선스 발급 서버",
+      "detailsMd": "",
+      "logoUrl": "/uploads/1761546627395-15f021ce7a4dec33.png",
+      "certRenewalDate": "",
+      "tokenExpiryDate": "",
+      "pinned": true,
+      "favorite": false,
+      "healthUrl": "https://lab.idatabank.com/arklicense-v2",
+      "healthMethod": "HEAD",
+      "healthOkMin": 200,
+      "tags": [
+        "license"
+      ]
+    },
+    {
+      "id": "6b799ad6-b384-4628-ba1d-44d0826ec308",
+      "name": "License v1",
+      "url": "https://lab.idatabank.com/arklicense/",
+      "gitUrl": "",
+      "description": "Ark for Oracle, Ark for FR 라이선스 발급 서버",
+      "detailsMd": "",
+      "logoUrl": "/uploads/1761546574000-dd49847aae73a5a2.png",
+      "certRenewalDate": "",
+      "tokenExpiryDate": "",
+      "pinned": true,
+      "favorite": false,
+      "healthUrl": "https://lab.idatabank.com/arklicense/",
+      "healthMethod": "HEAD",
+      "healthOkMin": 200,
+      "tags": [
+        "license"
+      ]
+    },
+    {
+      "id": "3497dde2-8063-4cb0-b66f-9aacce627247",
+      "name": "Nexus Repository Manager OSS",
+      "url": "https://lab.idatabank.com/nexus",
+      "gitUrl": "https://github.com/sonatype/nexus-public",
+      "description": "Sonatype Nexus Repository OSS codebase",
+      "detailsMd": "",
+      "logoUrl": "https://avatars.githubusercontent.com/u/44938",
+      "certRenewalDate": "",
+      "tokenExpiryDate": "",
+      "pinned": true,
+      "favorite": false,
+      "healthUrl": "https://lab.idatabank.com/nexus",
+      "healthMethod": "HEAD",
+      "healthOkMin": 200,
+      "tags": [
+        "dev"
+      ]
+    },
+    {
+      "id": "1d77c1b1-9751-4b0b-af4b-111b04a6f33a",
+      "name": "Jenkins",
+      "url": "https://lab.idatabank.com/jenkins",
+      "gitUrl": "https://github.com/jenkinsci/jenkins",
+      "description": "제품별 CI/CD 파이프라인",
+      "detailsMd": "",
+      "logoUrl": "https://avatars.githubusercontent.com/u/107424",
+      "certRenewalDate": "",
+      "tokenExpiryDate": "",
+      "pinned": true,
+      "favorite": false,
+      "healthUrl": "",
+      "healthMethod": "HEAD",
+      "healthOkMin": 200,
+      "tags": [
+        "dev"
+      ]
+    },
+    {
+      "id": "97634edc-3f08-400d-a376-a8b7969bdc33",
+      "name": "GitLab",
+      "url": "https://rnd.iarkdata.com/gitlab",
+      "gitUrl": "https://gitlab.com/rluna-gitlab/gitlab-ce",
+      "description": "아크데이타 제품별 리포지터리",
+      "detailsMd": "",
+      "logoUrl": "/uploads/1761546271303-02190ba438b161e7.jpg",
+      "certRenewalDate": "",
+      "tokenExpiryDate": "",
+      "pinned": true,
+      "favorite": false,
+      "healthUrl": "https://rnd.iarkdata.com/gitlab",
+      "healthMethod": "HEAD",
+      "healthOkMin": 200,
+      "tags": [
+        "dev"
+      ]
+    },
+    {
+      "id": "bf80b108-47a6-4aec-9057-d17ab05ffd71",
+      "name": "Jira",
+      "url": "https://lab.idatabank.com/jira",
+      "gitUrl": "",
+      "description": "아크데이타 제품별 이슈트래커",
+      "detailsMd": "",
+      "logoUrl": "/uploads/1761546154918-1b57dbcec7726ae1.png",
+      "certRenewalDate": "",
+      "tokenExpiryDate": "",
+      "pinned": true,
+      "favorite": true,
+      "healthUrl": "https://lab.idatabank.com/jira",
+      "healthMethod": "HEAD",
+      "healthOkMin": 200,
+      "tags": [
+        "dev"
+      ]
+    },
+    {
+      "id": "9b72907b-f746-49eb-a959-0b7d2ce57007",
+      "name": "Confluence",
+      "url": "https://lab.idatabank.com/confluence",
+      "gitUrl": "",
+      "description": "아크데이타 기술자료 위키",
+      "detailsMd": "",
+      "logoUrl": "/uploads/1761545903302-5dcdfc2c94a1b21f.png",
+      "certRenewalDate": "",
+      "tokenExpiryDate": "",
+      "pinned": true,
+      "favorite": true,
+      "healthUrl": "https://lab.idatabank.com/confluence",
+      "healthMethod": "HEAD",
+      "healthOkMin": 200,
+      "tags": [
+        "dev"
+      ]
+    }
+  ],
+  "settings": {
+    "siteTitle": "ArkData Lab.",
+    "siteSubtitle": "아크데이타 랩 런처 (웹서비스 · 파일럿프로그램)",
+    "sortMode": "alpha_asc",
+    "openMode": "new_tab",
+    "adminMode": true,
+    "healthEnabled": true,
+    "healthIntervalSec": 30,
+    "healthShowMs": true,
+    "colors": {
+      "star": "#1779c4",
+      "favBar": "#1779c4",
+      "pin": "#ff622e",
+      "pinBg": "#e0e0e0"
+    },
+    "theme": "classic",
+    "siteLogo": "/uploads/1761546060457-e2280f0bfd18d2f6.png",
+    "siteBackgroundUrl": ""
+  }
+}
