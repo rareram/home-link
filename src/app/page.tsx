@@ -28,6 +28,7 @@ function uuid() {
   });
 }
 
+/* -------------------- Types -------------------- */
 type HealthMethod = "HEAD" | "GET";
 type HealthState = { status: "up" | "warn" | "down" | "unknown"; code?: number; ms?: number };
 
@@ -67,8 +68,8 @@ type Settings = {
   colors?: { star?: string; favBar?: string; pin?: string; pinBg?: string };
 };
 
-type Payload = { version: number; items: AppLink[]; settings: Settings };
-
+// API response payload for GET
+type GetPayload = { items: AppLink[]; settings: Settings; globalSettings: Settings };
 
 
 /* -------------------- Utils -------------------- */
@@ -625,12 +626,10 @@ function SettingsDialog({ settings, onSave }: { settings: Settings; onSave: (s: 
 /* -------------------- Main Page -------------------- */
 export default function Page() {
   const [items, setItems] = useState<AppLink[]>([]);
-  const [query, setQuery] = useState("");
-  const [onlyFavorite, setOnlyFavorite] = useState(false);
   const [settings, setSettings] = useState<Settings>({
     siteTitle: "홈링크웹",
     siteSubtitle: "런처 중심 · 소스위치 · 만료 카운트",
-    sortMode: "alpha_asc", // 기본값 변경
+    sortMode: "alpha_asc",
     openMode: "new_tab",
     adminMode: true,
     healthEnabled: true,
@@ -638,39 +637,89 @@ export default function Page() {
     healthShowMs: true,
     colors: { star: "#f59e0b", favBar: "#f59e0b", pin: "#0ea5e9", pinBg: "#f0f9ff" },
   });
+  const [globalSettings, setGlobalSettings] = useState<Settings>(settings);
+
+  const [user, setUser] = useState("admin");
+  const [userInput, setUserInput] = useState("admin");
+
+  const [query, setQuery] = useState("");
+  const [onlyFavorite, setOnlyFavorite] = useState(false);
   const [showExpiredFirst, setShowExpiredFirst] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [editing, setEditing] = useState<AppLink | null>(null);
+  const isFirstLoad = useRef(true);
 
   // 서버에서 최초 로드
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/data", { cache: "no-store" });
+        const res = await fetch(`/api/data?user=${user}`, { cache: "no-store" });
         if (res.ok) {
-          const data = (await res.json()) as Payload;
+          const data = (await res.json()) as GetPayload;
           setItems(data.items || []);
-          setSettings((prev) => ({ ...prev, ...(data.settings || {}) }));
+          if (isFirstLoad.current) {
+            setGlobalSettings(data.globalSettings || {});
+            setSettings((prev) => ({ ...prev, ...(data.settings || {}) }));
+            isFirstLoad.current = false;
+          }
         }
       } catch {}
     })();
-  }, []);
+  }, [user]);
 
-  // 서버 자동 저장 (debounce)
+  // 사용자 아이템 자동 저장 (debounce)
   useEffect(() => {
+    if (isFirstLoad.current) return;
     const t = setTimeout(async () => {
-      const payload: Payload = { version: 1, items, settings };
       try {
-        await fetch("/api/data", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        await fetch(`/api/data?user=${user}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ items }),
+          }
+        );
       } catch {}
     }, 600);
     return () => clearTimeout(t);
-  }, [items, settings]);
+  }, [items, user]);
+
+  // 전체 설정 자동 저장 (debounce)
+  useEffect(() => {
+    if (isFirstLoad.current) return;
+    const t = setTimeout(async () => {
+      try {
+        if (user === "admin") {
+          await fetch(`/api/data?user=${user}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ settings }), // Send effective settings for admin to update global
+            }
+          );
+        } else {
+          // Calculate partial settings for user-specific overrides
+          const partialSettings: Partial<Settings> = {};
+          for (const key in settings) {
+            // @ts-ignore
+            if (settings[key] !== globalSettings[key]) {
+              // @ts-ignore
+              partialSettings[key] = settings[key];
+            }
+          }
+          await fetch(`/api/data?user=${user}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ settings: partialSettings }), // Send only partial settings
+            }
+          );
+        }
+      } catch {}
+    }, 600);
+    return () => clearTimeout(t);
+  }, [settings, globalSettings, user]);
 
   const allTags = useMemo(
     () => Array.from(new Set(items.flatMap(i => i.tags ?? []))).sort(),
@@ -726,11 +775,11 @@ export default function Page() {
   const remove = (id: string) => setItems((prev) => prev.filter((p) => p.id !== id));
 
   const doExport = () => {
-    const payload = { version: 1, items, settings };
+    const payload = { version: 2, items, settings };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = "home-links.json"; a.click();
+    a.href = url; a.download = `home-links-${user}.json`; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -739,16 +788,21 @@ export default function Page() {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      if (Array.isArray(parsed)) {
-        setItems(parsed as AppLink[]);
-      } else if (parsed && typeof parsed === "object") {
-        const maybeItems = Array.isArray(parsed.items) ? parsed.items as AppLink[] : [];
-        const maybeSettings = parsed.settings && typeof parsed.settings === "object" ? { ...settings, ...parsed.settings } as Settings : null;
-        if (maybeItems.length > 0) setItems(maybeItems);
-        if (maybeSettings) setSettings(maybeSettings);
-      } else {
-        alert("알 수 없는 JSON 형식입니다.");
+      
+      const importedItems = parsed.items as AppLink[] | undefined;
+      const importedSettings = parsed.settings as Settings | undefined;
+
+      if (Array.isArray(importedItems)) {
+        setItems(importedItems);
       }
+      if (importedSettings && typeof importedSettings === 'object') {
+        setSettings(s => ({...s, ...importedSettings}));
+      }
+
+      if (!Array.isArray(importedItems) && !(importedSettings && typeof importedSettings === 'object')) {
+        alert("알 수 없는 JSON 형식입니다. 'items' 배열 또는 'settings' 객체를 포함해야 합니다.");
+      }
+
     } catch {
       alert("JSON 파싱 중 오류가 발생했습니다.");
     } finally {
@@ -800,7 +854,9 @@ export default function Page() {
             </DropdownMenu>
 
             <ThemeToggle />
-            <SettingsDialog settings={settings} onSave={(s) => setSettings(s)} />
+            {user === "admin" && (
+              <SettingsDialog settings={settings} onSave={(s) => setSettings(s)} />
+            )}
             <AppForm onSubmit={upsert} />
 
             <Button variant="outline" onClick={doExport} className="gap-2 h-9">
@@ -822,13 +878,19 @@ export default function Page() {
           </div>
         </div>
 
+        {/* User Switcher */}
+        <div className="mt-4 flex items-center gap-2 max-w-sm p-3 rounded-lg border bg-muted/40">
+            <Label htmlFor="user-input" className="text-sm font-medium">사용자:</Label>
+            <Input id="user-input" className="h-8" value={userInput} onChange={e => setUserInput(e.target.value)} placeholder="e.g. admin, paul" />
+            <Button size="sm" className="h-8" onClick={() => setUser(userInput)}>전환</Button>
+        </div>
+
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mt-6">
           {filtered.map((it) => (
             <AppCard
               key={it.id}
               item={it}
-              theme={settings.theme}
               openMode={settings.openMode}
               adminMode={settings.adminMode}
               settingsHealth={{ enabled: settings.healthEnabled, intervalSec: settings.healthIntervalSec, showMs: settings.healthShowMs }}
