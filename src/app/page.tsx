@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { UserProfile } from "@/components/user-profile";
 
 /* -------------------- Helpers -------------------- */
 function uuid() {
@@ -37,6 +37,8 @@ type AppLink = {
   name: string;
   url: string;
   gitUrl?: string;
+  siteUrl?: string;
+  docUrl?: string;
   description?: string;
   detailsMd?: string;
   logoUrl?: string;
@@ -48,9 +50,10 @@ type AppLink = {
   healthMethod?: HealthMethod;
   healthOkMin?: number;
   tags?: string[];
+  isPublic?: boolean;
 };
 
-type ThemeId = "classic" | "ocean" | "carbon" | "sunset";
+
 type SortMode = "urgency" | "alpha_asc" | "alpha_desc" | "pinned_fav_urgency";
 type OpenMode = "new_tab" | "same_tab";
 
@@ -145,19 +148,22 @@ async function uploadLogo(file: File): Promise<string> {
 
 /* -------------------- App Form -------------------- */
 function AppForm({
-  initial, onSubmit, trigger, defaultOpen,
+  initial, onSubmit, trigger, defaultOpen, userRole,
 }: {
   initial?: Partial<AppLink>;
   onSubmit: (v: AppLink) => void;
   trigger?: React.ReactNode;
   defaultOpen?: boolean;
+  userRole: "admin" | "user";
 }) {
   const [open, setOpen] = useState(!!defaultOpen);
-  const [form, setForm] = useState<AppLink>({
+  const [form, setForm] = useState<AppLink>(() => ({
     id: initial?.id ?? uuid(),
     name: initial?.name ?? "",
     url: initial?.url ?? "",
     gitUrl: initial?.gitUrl ?? "",
+    siteUrl: initial?.siteUrl ?? "",
+    docUrl: initial?.docUrl ?? "",
     description: initial?.description ?? "",
     detailsMd: initial?.detailsMd ?? "",
     logoUrl: initial?.logoUrl ?? "",
@@ -169,7 +175,8 @@ function AppForm({
     healthMethod: initial?.healthMethod ?? "HEAD",
     healthOkMin: initial?.healthOkMin ?? 200,
     tags: initial?.tags ?? [],
-  });
+    isPublic: initial?.isPublic ?? (userRole === 'admin'),
+  }));
   // 태그 입력 UX: text로 입력받고 저장 시 파싱
   const [tagsText, setTagsText] = useState<string>((initial?.tags ?? []).join(", "));
 
@@ -180,6 +187,8 @@ function AppForm({
         name: initial?.name ?? "",
         url: initial?.url ?? "",
         gitUrl: initial?.gitUrl ?? "",
+        siteUrl: initial?.siteUrl ?? "",
+        docUrl: initial?.docUrl ?? "",
         description: initial?.description ?? "",
         detailsMd: initial?.detailsMd ?? "",
         logoUrl: initial?.logoUrl ?? "",
@@ -236,6 +245,14 @@ function AppForm({
               <div className="space-y-2">
                 <Label htmlFor="git">소스(Git) URL</Label>
                 <Input id="git" value={form.gitUrl} onChange={(e) => setForm({ ...form, gitUrl: e.target.value })} placeholder="https://gitlab/... 또는 https://github.com/..." />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="site">웹사이트 URL</Label>
+                <Input id="site" value={form.siteUrl} onChange={(e) => setForm({ ...form, siteUrl: e.target.value })} placeholder="https://..." />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="doc">문서 URL</Label>
+                <Input id="doc" value={form.docUrl} onChange={(e) => setForm({ ...form, docUrl: e.target.value })} placeholder="https://..." />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="logo">로고 (URL 또는 파일)</Label>
@@ -311,12 +328,13 @@ function AppForm({
 
 /* -------------------- App Card -------------------- */
 function AppCard({
-  item, openMode, adminMode,
+  item, openMode, adminMode, userRole,
   settingsHealth, onEdit, onDelete, onToggleFavorite, onTogglePinned, colors,
 }: {
   item: AppLink;
   openMode: OpenMode;
   adminMode: boolean;
+  userRole: "admin" | "user";
   settingsHealth: { enabled: boolean; intervalSec: number; showMs: boolean };
   onEdit: () => void;
   onDelete: () => void;
@@ -384,14 +402,28 @@ function AppCard({
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-sm truncate" title={item.name}>{item.name}</h3>
-                {item.gitUrl && (
-                  <button aria-label="소스 저장소" className="ml-1 p-1 rounded hover:bg-muted"
-                    onClick={(e)=>{ e.stopPropagation(); window.open(item.gitUrl!, '_blank'); }}>
-                    <Lucide.Github className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                <div className="flex items-center flex-shrink-0">
+                  {item.siteUrl && (
+                    <button aria-label="웹사이트" className="p-1 rounded hover:bg-muted"
+                      onClick={(e)=>{ e.stopPropagation(); window.open(item.siteUrl!, '_blank'); }}>
+                      <Lucide.Globe className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {item.docUrl && (
+                    <button aria-label="문서" className="p-1 rounded hover:bg-muted"
+                      onClick={(e)=>{ e.stopPropagation(); window.open(item.docUrl!, '_blank'); }}>
+                      <Lucide.BookText className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {item.gitUrl && (
+                    <button aria-label="소스 저장소" className="p-1 rounded hover:bg-muted"
+                      onClick={(e)=>{ e.stopPropagation(); window.open(item.gitUrl!, '_blank'); }}>
+                      <Lucide.Github className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
               <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5" title={item.description}>{item.description}</p>
 
@@ -444,6 +476,16 @@ function AppCard({
                       <a href={item.url} onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 underline">
                         <Lucide.ExternalLink className="w-4 h-4" />현재 탭에서 열기
                       </a>
+                      {item.siteUrl && (
+                        <a href={item.siteUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 underline">
+                          <Lucide.Home className="w-4 h-4" />웹사이트
+                        </a>
+                      )}
+                      {item.docUrl && (
+                        <a href={item.docUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 underline">
+                          <Lucide.Book className="w-4 h-4" />문서
+                        </a>
+                      )}
                       {item.gitUrl && (
                         <a href={item.gitUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 underline">
                           <Lucide.Github className="w-4 h-4" />소스
@@ -475,12 +517,16 @@ function AppCard({
                   <DropdownMenuItem onClick={() => navigator.clipboard.writeText(item.url)} className="gap-2">
                     <Lucide.Link className="w-4 h-4" />URL 복사
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={onEdit} className="gap-2">
-                    <Lucide.Edit className="w-4 h-4" />편집
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={onDelete} className="gap-2 text-red-600">
-                    <Lucide.AlertCircle className="w-4 h-4" />삭제
-                  </DropdownMenuItem>
+                  {(userRole === 'admin' || !item.isPublic) && (
+                    <>
+                      <DropdownMenuItem onClick={onEdit} className="gap-2">
+                        <Lucide.Edit className="w-4 h-4" />편집
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={onDelete} className="gap-2 text-red-600">
+                        <Lucide.AlertCircle className="w-4 h-4" />삭제
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -530,9 +576,7 @@ function SettingsDialog({ settings, onSave }: { settings: Settings; onSave: (s: 
           <div className="space-y-2">
             <Label>사이트 로고</Label>
             <div className="flex items-center gap-3">
-              <div className="w-[50px] h-[50px] rounded bg-muted overflow-hidden flex items-center justify-center">
-                {form.siteLogo ? <img src={form.siteLogo} className="w-[50px] h-[50px] object-contain" /> : <Lucide.Image className="w-5 h-5 opacity-50" />}
-              </div>
+              <SiteLogo src={form.siteLogo} />
               <label className="inline-flex items-center px-3 h-9 whitespace-nowrap border rounded-md cursor-pointer text-sm">
                 <Lucide.Upload className="w-4 h-4 mr-2" />업로드
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleLogo(e.target.files?.[0] ?? null)} />
@@ -624,6 +668,18 @@ function SettingsDialog({ settings, onSave }: { settings: Settings; onSave: (s: 
 }
 
 /* -------------------- Main Page -------------------- */
+
+const SiteLogo = ({ src }: { src?: string | null }) => {
+  const containerClass = "w-[55px] h-[55px] rounded overflow-hidden flex items-center justify-center";
+  const imgClass = "w-[55px] h-[55px] object-contain";
+  const placeholder = <Lucide.Image className="w-5 h-5 opacity-50" />;
+  return (
+    <div className={containerClass}>
+      {src ? <img src={src} className={imgClass} alt="Site Logo" /> : placeholder}
+    </div>
+  );
+};
+
 export default function Page() {
   const [items, setItems] = useState<AppLink[]>([]);
   const [settings, setSettings] = useState<Settings>({
@@ -639,8 +695,7 @@ export default function Page() {
   });
   const [globalSettings, setGlobalSettings] = useState<Settings>(settings);
 
-  const [user, setUser] = useState("admin");
-  const [userInput, setUserInput] = useState("admin");
+  const [userRole, setUserRole] = useState("admin");
 
   const [query, setQuery] = useState("");
   const [onlyFavorite, setOnlyFavorite] = useState(false);
@@ -654,10 +709,10 @@ export default function Page() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`/api/data?user=${user}`, { cache: "no-store" });
+        const res = await fetch(`/api/data?user=${userRole}`, { cache: "no-store" });
         if (res.ok) {
           const data = (await res.json()) as GetPayload;
-          setItems(data.items || []);
+          setItems((data.items || []).map(item => ({ ...item, isPublic: item.isPublic ?? true })));
           if (isFirstLoad.current) {
             setGlobalSettings(data.globalSettings || {});
             setSettings((prev) => ({ ...prev, ...(data.settings || {}) }));
@@ -666,14 +721,14 @@ export default function Page() {
         }
       } catch {}
     })();
-  }, [user]);
+  }, [userRole]);
 
   // 사용자 아이템 자동 저장 (debounce)
   useEffect(() => {
     if (isFirstLoad.current) return;
     const t = setTimeout(async () => {
       try {
-        await fetch(`/api/data?user=${user}`,
+        await fetch(`/api/data?user=${userRole}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -683,15 +738,15 @@ export default function Page() {
       } catch {}
     }, 600);
     return () => clearTimeout(t);
-  }, [items, user]);
+  }, [items, userRole]);
 
   // 전체 설정 자동 저장 (debounce)
   useEffect(() => {
     if (isFirstLoad.current) return;
     const t = setTimeout(async () => {
       try {
-        if (user === "admin") {
-          await fetch(`/api/data?user=${user}`,
+        if (userRole === "admin") {
+          await fetch(`/api/data?user=${userRole}`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -708,7 +763,7 @@ export default function Page() {
               partialSettings[key] = settings[key];
             }
           }
-          await fetch(`/api/data?user=${user}`,
+          await fetch(`/api/data?user=${userRole}`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -719,7 +774,7 @@ export default function Page() {
       } catch {}
     }, 600);
     return () => clearTimeout(t);
-  }, [settings, globalSettings, user]);
+  }, [settings, globalSettings, userRole]);
 
   const allTags = useMemo(
     () => Array.from(new Set(items.flatMap(i => i.tags ?? []))).sort(),
@@ -779,7 +834,7 @@ export default function Page() {
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `home-links-${user}.json`; a.click();
+    a.href = url; a.download = `home-links-${userRole}.json`; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -823,9 +878,7 @@ export default function Page() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-[50px] h-[50px] rounded bg-muted overflow-hidden flex items-center justify-center">
-              {settings.siteLogo ? <img src={settings.siteLogo} className="w-[50px] h-[50px] object-contain" /> : <Lucide.Image className="w-5 h-5 opacity-50" />}
-            </div>
+            <SiteLogo src={settings.siteLogo} />
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{settings.siteTitle}</h1>
               <p className="text-sm text-muted-foreground mt-1">{settings.siteSubtitle}</p>
@@ -853,19 +906,8 @@ export default function Page() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <ThemeToggle />
-            {user === "admin" && (
-              <SettingsDialog settings={settings} onSave={(s) => setSettings(s)} />
-            )}
-            <AppForm onSubmit={upsert} />
-
-            <Button variant="outline" onClick={doExport} className="gap-2 h-9">
-              <Lucide.Save className="w-4 h-4" />내보내기
-            </Button>
-            <Button variant="outline" className="gap-2 h-9" onClick={() => fileInputRef.current?.click()}>
-              <Lucide.Upload className="w-4 h-4" />불러오기
-            </Button>
-            <input ref={fileInputRef} type="file" accept="application/json" className="hidden" onChange={(e) => onImport(e.target.files?.[0] ?? null)} />
+            <AppForm onSubmit={upsert} userRole={userRole} />
+            <UserProfile userRole={userRole} setUserRole={setUserRole} settings={settings} onSettingsSave={setSettings} />
           </div>
         </div>
 
@@ -878,13 +920,6 @@ export default function Page() {
           </div>
         </div>
 
-        {/* User Switcher */}
-        <div className="mt-4 flex items-center gap-2 max-w-sm p-3 rounded-lg border bg-muted/40">
-            <Label htmlFor="user-input" className="text-sm font-medium">사용자:</Label>
-            <Input id="user-input" className="h-8" value={userInput} onChange={e => setUserInput(e.target.value)} placeholder="e.g. admin, paul" />
-            <Button size="sm" className="h-8" onClick={() => setUser(userInput)}>전환</Button>
-        </div>
-
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mt-6">
           {filtered.map((it) => (
@@ -893,6 +928,7 @@ export default function Page() {
               item={it}
               openMode={settings.openMode}
               adminMode={settings.adminMode}
+              userRole={userRole}
               settingsHealth={{ enabled: settings.healthEnabled, intervalSec: settings.healthIntervalSec, showMs: settings.healthShowMs }}
               colors={{
                 star: settings.colors?.star ?? "#f59e0b",
@@ -910,7 +946,7 @@ export default function Page() {
       </div>
 
       {/* Global Editor */}
-      {editing && <AppForm initial={editing} defaultOpen onSubmit={(v) => { upsert(v); setEditing(null); }} trigger={<span />} />}
+      {editing && <AppForm initial={editing} userRole={userRole} defaultOpen onSubmit={(v) => { upsert(v); setEditing(null); }} trigger={<span />} />}
     </div>
   );
 }
