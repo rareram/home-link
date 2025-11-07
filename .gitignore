@@ -170,3 +170,6 @@ vite.config.ts.timestamp-*
 # typescript
 next-env.d.ts
 nohup.out
+
+# Local data file
+/data/home-links.json

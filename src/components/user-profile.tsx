@@ -192,7 +192,7 @@ const loggedInUser = {
   image: "https://github.com/shadcn.png", // Example avatar
 };
 
-export function UserProfile({ userRole, setUserRole, settings, onSettingsSave }) {
+export function UserProfile({ userRole, setUserRole, settings, onSettingsSave, onImport, onExport }) {
   const { setTheme } = useTheme();
   const [isHelpOpen, setHelpOpen] = useState(false);
   const [isAboutOpen, setAboutOpen] = useState(false);
@@ -262,11 +262,11 @@ export function UserProfile({ userRole, setUserRole, settings, onSettingsSave })
             </DropdownMenuPortal>
           </DropdownMenuSub>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={onImport}>
              <FileDown className="mr-2 h-4 w-4" />
              <span>Import settings...</span>
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={onExport}>
              <FileUp className="mr-2 h-4 w-4" />
              <span>Export settings...</span>
           </DropdownMenuItem>

@@ -874,6 +874,13 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-10" style={pageStyle}>
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={(e) => onImport(e.target.files?.[0])}
+        className="hidden"
+        accept=".json"
+      />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -907,7 +914,7 @@ export default function Page() {
             </DropdownMenu>
 
             <AppForm onSubmit={upsert} userRole={userRole} />
-            <UserProfile userRole={userRole} setUserRole={setUserRole} settings={settings} onSettingsSave={setSettings} />
+            <UserProfile userRole={userRole} setUserRole={setUserRole} settings={settings} onSettingsSave={setSettings} onImport={() => fileInputRef.current?.click()} onExport={doExport} />
           </div>
         </div>
 

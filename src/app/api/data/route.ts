@@ -90,9 +90,15 @@ async function readDataFile(): Promise<FullData> {
   try {
     const raw = await fs.readFile(file, "utf-8");
     return JSON.parse(raw) as FullData;
-  } catch {
-    await ensureDir(path.dirname(file));
-    await fs.writeFile(file, JSON.stringify(DEFAULTS, null, 2), "utf-8");
+  } catch (error: any) {
+    if (error.code === 'ENOENT') { // File not found, create with defaults
+      await ensureDir(path.dirname(file));
+      await fs.writeFile(file, JSON.stringify(DEFAULTS, null, 2), "utf-8");
+      return DEFAULTS;
+    }
+    console.error("Error reading or parsing data file:", error);
+    // If file exists but is corrupt, return defaults as a fallback without overwriting the file
+    // This prevents an infinite loop of overwriting a potentially good file with bad defaults
     return DEFAULTS;
   }
 }
@@ -111,6 +117,33 @@ async function ensureDir(dir: string) {
 
 // --- API Handlers ---
 
+class AsyncMutex {
+  private queue: (() => void)[] = [];
+  private locked = false;
+
+  async acquire(): Promise<void> {
+    return new Promise((resolve) => {
+      if (!this.locked) {
+        this.locked = true;
+        resolve();
+      } else {
+        this.queue.push(resolve);
+      }
+    });
+  }
+
+  release(): void {
+    if (this.queue.length > 0) {
+      const next = this.queue.shift()!;
+      next();
+    } else {
+      this.locked = false;
+    }
+  }
+}
+
+const fileMutex = new AsyncMutex();
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -122,7 +155,7 @@ export async function GET(req: NextRequest) {
     const userSettings = data.users?.[user]?.settings || {};
     const effectiveSettings = { ...globalSettings, ...userSettings };
 
-    const commonItems = data.users?.admin?.items || [];
+    const commonItems = data.common?.items || [];
     const userItems = data.users?.[user]?.items || [];
 
     // Combine items, with user-specific items taking precedence
@@ -147,6 +180,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  await fileMutex.acquire();
   try {
     const { searchParams } = new URL(req.url);
     const user = searchParams.get("user");
@@ -175,17 +209,35 @@ export async function POST(req: NextRequest) {
         data.globalSettings = { ...data.globalSettings, ...body.settings };
       }
       if ("items" in body) {
-        data.users[user].items = body.items;
+        data.common.items = body.items;
+        // Clear admin-specific items to avoid confusion
+        if (data.users.admin) {
+          data.users.admin.items = [];
+        }
       }
     } else {
       if ("settings" in body) {
         data.users[user].settings = { ...data.users[user].settings, ...body.settings };
       }
       if ("items" in body) {
-        const adminItems = data.users?.admin?.items || [];
-        const adminItemIds = new Set(adminItems.map(item => item.id));
-        const userSpecificItems = body.items.filter((item: AppLink) => !adminItemIds.has(item.id));
-        data.users[user].items = userSpecificItems;
+        const commonItems = data.common?.items || [];
+        const commonItemsMap = new Map(commonItems.map(item => [item.id, item]));
+        const userItemsToSave: AppLink[] = [];
+
+        for (const item of body.items) {
+          const commonItem = commonItemsMap.get(item.id);
+          if (!commonItem) {
+            // It's a new item created by the user
+            userItemsToSave.push(item);
+          } else {
+            // It's a potentially modified common item.
+            // Using simple inequality for comparison as object references will differ.
+            if (JSON.stringify(item) !== JSON.stringify(commonItem)) {
+              userItemsToSave.push(item);
+            }
+          }
+        }
+        data.users[user].items = userItemsToSave;
       }
     }
 
@@ -194,5 +246,7 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     const error = e instanceof Error ? e.message : "unknown error";
     return NextResponse.json({ error: "failed to save", details: error }, { status: 500 });
+  } finally {
+    fileMutex.release();
   }
 }
